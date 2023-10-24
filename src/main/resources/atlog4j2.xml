@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright (c) Forge Development LLC
+    SPDX-License-Identifier: LGPL-2.1-only
+-->
 <Configuration status="WARN">
     <Appenders>
         <Console name="SysErr" target="SYSTEM_ERR">

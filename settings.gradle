@@ -5,5 +5,45 @@ pluginManagement {
     }
 }
 
-rootProject.name = 'accesstransformers'
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.7.0'
+}
+
+dependencyResolutionManagement {
+    versionCatalogs {
+        libs {
+            version('asm', '9.6')
+            library('asm',         'org.ow2.asm', 'asm'        ).versionRef('asm')
+            library('asm-tree',    'org.ow2.asm', 'asm-tree'   ).versionRef('asm')
+            library('asm-commons', 'org.ow2.asm', 'asm-commons').versionRef('asm')
+            bundle('asm', ['asm', 'asm-tree', 'asm-commons'])
+            
+			version('junit', '5.10.0')
+			library('junit-api', 'org.junit.jupiter', 'junit-jupiter-api').versionRef('junit')
+			library('junit-engine', 'org.junit.jupiter', 'junit-jupiter-engine').versionRef('junit')
+			library('junit-platform-launcher', 'org.junit.platform:junit-platform-launcher:1.10.0')
+			bundle('junit-runtime', ['junit-engine', 'junit-platform-launcher'])
+
+            library('unsafe', 'net.minecraftforge:unsafe:0.9.2')
+            library('modlauncher', 'net.minecraftforge:modlauncher:10.1.1') // Needs securemodules
+            library('securemodules', 'net.minecraftforge:securemodules:2.2.2') // Needs unsafe
+            library('gson', 'com.google.code.gson:gson:2.10.1')
+            library('jopt-simple', 'net.sf.jopt-simple:jopt-simple:5.0.4')
+            library('nulls', 'org.jetbrains:annotations:23.0.0')
+            
+            version('antlr4', '4.9.1')
+            library('antlr4',         'org.antlr', 'antlr4'        ).versionRef('antlr4')
+            library('antlr4-runtime', 'org.antlr', 'antlr4-runtime').versionRef('antlr4')
+            
+            version('log4j', '2.19.0')
+            library('log4j-api',  'org.apache.logging.log4j', 'log4j-api' ).versionRef('log4j')
+            library('log4j-core', 'org.apache.logging.log4j', 'log4j-core').versionRef('log4j')
+        }
+    }
+}
+
+rootProject.name = 'AccessTransformers'
+include 'at-mlservice'
+include 'at-test'
+include 'at-test-jar'
 

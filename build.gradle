@@ -1,131 +1,94 @@
-plugins {
-    id 'com.github.johnrengelman.shadow' version '6.1.0'
-    id 'com.github.ben-manes.versions' version '0.39.0'
-    id 'antlr'
-    id 'org.javamodularity.moduleplugin' version '1.8.3' apply false
-    id 'net.minecraftforge.gradleutils' version '2.+'
-}
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import net.minecraftforge.gradleutils.PomUtils
 
-apply plugin: 'maven-publish'
-apply plugin: 'java-library'
-apply plugin: 'eclipse'
-apply plugin: 'org.javamodularity.moduleplugin'
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'eclipse'
+    id 'org.cadixdev.licenser' version '0.6.1'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'antlr'
+    id 'net.minecraftforge.gradleutils' version '[2.1.2,)'
+}
 
 group 'net.minecraftforge'
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(16)
-
-version = gradleutils.getTagOffsetVersion()
+version = gradleutils.tagOffsetVersion
 println('Version: ' + version)
 
-def isNonStable = { String version ->
-    def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { it -> version.toUpperCase().contains(it) }
-    def regex = /^[0-9,.v-]+(-r)?$/
-    return !stableKeyword && !(version ==~ regex)
+repositories {
+    mavenCentral()
+    maven gradleutils.forgeMaven
+    mavenLocal()
 }
 
-dependencyUpdates {
-    rejectVersionIf {
-        isNonStable(it.candidate.version)
-    }
+license {
+    header = file('LICENSE-header.txt')
+    newLine = false
 }
 
-test {
-    useJUnitPlatform()
-}
-
-sourceSets {
-    testJars
-    modlauncherImpl
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(8)
+    withSourcesJar()
 }
 
 compileJava {
     dependsOn generateGrammarSource
-    targetCompatibility = sourceCompatibility = 1.8
 }
 
-jar.manifest = manifest {
-    attributes(['Specification-Title': 'accesstransformers',
-                'Specification-Vendor': 'forge',
-                'Specification-Version': '1', // Currently version 1 of the accesstransformer specification
-                'Implementation-Title': project.name,
-                'Implementation-Version': "${project.version}+${System.getenv('BUILD_NUMBER')?:0}+${gradleutils.gitInfo.branch}.${gradleutils.gitInfo.abbreviatedId}",
-                'Implementation-Vendor': 'forge',
-                'Implementation-Timestamp': java.time.Instant.now().toString(),
-                'Git-Commit': gradleutils.gitInfo.abbreviatedId,
-                'Git-Branch': gradleutils.gitInfo.branch,
-                'Build-Number': "${System.getenv('BUILD_NUMBER')?:0}" ],
-            'net/minecraftforge/accesstransformer/service/')
-    attributes(['Specification-Title': 'accesstransformers',
-                'Specification-Vendor': 'Forge',
-                'Specification-Version': '1', // Currently version 1 of the accesstransformer specification
-                'Implementation-Title': project.name,
-                'Implementation-Version': "${project.version}+${System.getenv('BUILD_NUMBER')?:0}+${gradleutils.gitInfo.branch}.${gradleutils.gitInfo.abbreviatedId}",
-                'Implementation-Vendor': 'forge',
-                'Implementation-Timestamp': java.time.Instant.now().toString(),
-                'Git-Commit': gradleutils.gitInfo.abbreviatedId,
-                'Git-Branch': gradleutils.gitInfo.branch,
-                'Build-Number': "${System.getenv('BUILD_NUMBER')?:0}" ],
-            'net/minecraftforge/accesstransformer/')
+tasks.named('jar', Jar).configure {
+    dependsOn ':at-mlservice:compileJava'
+    doFirst {
+        from project(':at-mlservice').sourceSets.main.output
+    }
+
+    ext.SPEC = '1' // Should be tag but whatever
+    manifest {
+        attributes([
+            'Specification-Title': 'accesstransformers',
+            'Specification-Vendor': 'Forge Development LLC',
+            'Specification-Version': SPEC,
+            'Implementation-Title': project.name,
+            'Implementation-Version': project.version,
+            'Implementation-Vendor': 'Forge Development LLC'
+        ] as java.util.LinkedHashMap, 'net/minecraftforge/accesstransformer/')
+        attributes([
+            'Specification-Title': 'accesstransformers',
+            'Specification-Vendor': 'Forge Development LLC',
+            'Specification-Version': SPEC,
+            'Implementation-Title': project.name,
+            'Implementation-Version': project.version,
+            'Implementation-Vendor': 'Forge Development LLC'
+        ] as java.util.LinkedHashMap, 'net/minecraftforge/accesstransformer/service/')
+    }
 }
 
-task testsJar(type: Jar) {
-    archiveClassifier = 'testsjar'
-    from sourceSets.testJars.output
-}
-
-task sourcesJar(type: Jar) {
+tasks.named('sourcesJar').configure {
     dependsOn generateGrammarSource
-    archiveClassifier = 'sources'
-    from sourceSets.main.allSource
 }
 
 changelog {
     fromTag '1.0'
 }
 
-build.dependsOn testsJar
-
-repositories {
-    mavenLocal()
-    mavenCentral()
-    maven {
-        name = 'forge'
-        url = 'https://maven.minecraftforge.net/'
-    }
-}
-
 dependencies {
-    testImplementation('org.junit.jupiter:junit-jupiter-api:5.7.+')
-    testImplementation('org.powermock:powermock-core:2.0+')
-    testImplementation('cpw.mods:modlauncher:9.0.4')
-    testImplementation('com.google.code.gson:gson:2.8.6')
-    testImplementation(sourceSets.modlauncherImpl.output)
-    testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.7.+')
-    testRuntimeOnly(sourceSets.testJars.runtimeClasspath)
-    implementation('org.antlr:antlr4-runtime:4.9.1')
-    implementation('net.sf.jopt-simple:jopt-simple:5.0.4')
-    implementation('org.ow2.asm:asm:9.1')
-    implementation('org.ow2.asm:asm-commons:9.1')
-    implementation('org.ow2.asm:asm-tree:9.1')
-    implementation('org.apache.logging.log4j:log4j-api:2.11.+')
-    implementation('org.apache.logging.log4j:log4j-core:2.11.+')
-    modlauncherImplImplementation('cpw.mods:modlauncher:9.0.4')
-    modlauncherImplImplementation(sourceSets.main.output)
-    antlr('org.antlr:antlr4:4.9.1')
+    implementation(libs.antlr4.runtime)
+    implementation(libs.jopt.simple)
+    implementation(libs.bundles.asm)
+    implementation(libs.log4j.api)
+    implementation(libs.log4j.core)
+    antlr(libs.antlr4)
 }
 
-jar {
-    from sourceSets.modlauncherImpl.output
-}
-
-shadowJar {
-    classifier 'fatjar'
+tasks.named('shadowJar', ShadowJar).configure {
+    archiveClassifier = 'fatjar'
     exclude '**/Log4j2Plugins.dat'
     manifest {
         inheritFrom jar.manifest
-        attributes('Main-Class': 'net.minecraftforge.accesstransformer.TransformerProcessor')
-        attributes('Multi-Release': 'true')
+        attributes([
+            'Main-Class': 'net.minecraftforge.accesstransformer.TransformerProcessor',
+            'Multi-Release': 'true'
+        ])
     }
     dependencies {
         exclude(dependency {
@@ -135,57 +98,49 @@ shadowJar {
 }
 
 artifacts {
-    archives jar
-    archives sourcesJar
-    archives testsJar
     archives shadowJar
 }
 
 publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            artifact sourcesJar
-            pom {
-                name = 'Access Transformers'
-                description = 'Transforms class member access based on specification files'
-                url = 'https://github.com/MinecraftForge/AccessTransformers'
-                scm {
-                    url = 'https://github.com/MinecraftForge/AccessTransformers'
-                    connection = 'scm:git:git://github.com/MinecraftForge/AccessTransformers.git'
-                    developerConnection = 'scm:git:git@github.com:MinecraftForge/AccessTransformers.git'
-                }
-                issueManagement {
-                    system = 'github'
-                    url = 'https://github.com/MinecraftForge/AccessTransformers/issues'
-                }
+    publications.register('mavenJava', MavenPublication) {
+        from components.java
+        artifactId = 'accesstransformers'
+        pom {
+            name = 'Access Transformers'
+            description = 'Transforms class member access based on specification files'
+            url = 'https://github.com/MinecraftForge/AccessTransformers'
+            PomUtils.setGitHubDetails(pom, 'AccessTransformers')
 
-                licenses {
-                    license {
-                        name = 'MIT'
-                        url = 'https://opensource.org/licenses/MIT'
-                    }
-                }
+            license PomUtils.Licenses.MIT
 
-                developers {
-                    developer {
-                        id = 'cpw'
-                        name = 'cpw'
-                    }
-                    developer {
-                        id = 'DemonWav'
-                        name = 'DemonWav'
-                    }
-                }
+            developers {
+                developer PomUtils.Developers.LexManos
+                developer PomUtils.Developers.cpw
+                developer PomUtils.Developers.DemonWav
             }
         }
     }
     repositories {
-        maven gradleutils.getPublishingForgeMaven()
+        maven gradleutils.publishingForgeMaven
     }
 }
 
 generateGrammarSource {
     arguments += ['-visitor', '-package', 'net.minecraftforge.accesstransformer.generated']
     outputDirectory = file("${project.buildDir}/generated-src/antlr/main/net/minecraftforge/accesstransformer/generated/")
+}
+
+allprojects {
+    ext.VALID_VMS = [
+        'Adoptium':  [16, 17, 18, 19, 20, 21],
+        'Amazon':    [16, 17, 18, 19, 20, 21],
+        'Azul':      (16..21),
+        'BellSoft':  (16..21),
+        'Graal_VM':  [16, 17,     19, 20, 21],
+        'IBM':       [16, 17, 18, 19, 20    ],
+        'Microsoft': [16, 17,             21],
+        'Oracle':    (16..21),
+        'SAP':       (16..20)
+    ]
+    ext.VALID_VMS = [ 'Adoptium':  [16] ]
 }

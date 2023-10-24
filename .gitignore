@@ -1,8 +1,8 @@
 #eclipse
-/bin
-/.settings
-/.classpath
-/.project
+/**/bin
+/**/.settings
+/**/.classpath
+/**/.project
 
 #In case people make their workspace in the repo
 /eclipse/
@@ -13,8 +13,8 @@
 *.iml
 
 #gradle
-/build
-/.gradle
+/**/build
+/**/.gradle
 
 #occupational hazards
 /projects/
@@ -30,3 +30,4 @@
 /forge-deobfed.jar
 /out.log
 gradle.properties
+/**/logs/
