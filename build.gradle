@@ -19,7 +19,6 @@ println('Version: ' + version)
 repositories {
     mavenCentral()
     maven gradleutils.forgeMaven
-    mavenLocal()
 }
 
 license {
@@ -37,6 +36,7 @@ compileJava {
 }
 
 tasks.named('jar', Jar).configure {
+    dependsOn ':at-mlservice:processResources'
     dependsOn ':at-mlservice:compileJava'
     doFirst {
         from project(':at-mlservice').sourceSets.main.output
