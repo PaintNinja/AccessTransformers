@@ -24,6 +24,7 @@ repositories {
 license {
     header = file('LICENSE-header.txt')
     newLine = false
+    exclude '**/generated/*.java'
 }
 
 java {
@@ -31,8 +32,8 @@ java {
     withSourcesJar()
 }
 
-compileJava {
-    dependsOn generateGrammarSource
+tasks.named('compileJava', JavaCompile).configure {
+    dependsOn 'generateGrammarSource'
 }
 
 tasks.named('jar', Jar).configure {
@@ -125,9 +126,10 @@ publishing {
     }
 }
 
-generateGrammarSource {
+tasks.named('generateGrammarSource', AntlrTask).configure {
+    dependsOn 'checkLicenseMain'
     arguments += ['-visitor', '-package', 'net.minecraftforge.accesstransformer.generated']
-    outputDirectory = file("${project.buildDir}/generated-src/antlr/main/net/minecraftforge/accesstransformer/generated/")
+    outputDirectory = file("${project.layout.buildDirectory.asFile.get()}/generated-src/antlr/main/net/minecraftforge/accesstransformer/generated/")
 }
 
 allprojects {

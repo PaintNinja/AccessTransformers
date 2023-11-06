@@ -38,6 +38,11 @@ dependencyResolutionManagement {
             version('log4j', '2.19.0')
             library('log4j-api',  'org.apache.logging.log4j', 'log4j-api' ).versionRef('log4j')
             library('log4j-core', 'org.apache.logging.log4j', 'log4j-core').versionRef('log4j')
+
+            version('jmh', '1.37')
+            library('jmh-core', 'org.openjdk.jmh', 'jmh-core').versionRef('jmh')
+            library('jmh-generator-annprocess', 'org.openjdk.jmh', 'jmh-generator-annprocess').versionRef('jmh')
+            bundle('jmh', ['jmh-core', 'jmh-generator-annprocess'])
         }
     }
 }
@@ -46,4 +51,5 @@ rootProject.name = 'AccessTransformers'
 include 'at-mlservice'
 include 'at-test'
 include 'at-test-jar'
+include 'at-jmh'
 
