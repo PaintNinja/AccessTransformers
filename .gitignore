@@ -19,7 +19,6 @@
 #occupational hazards
 /projects/
 /repo/
-/buildSrc/
 /out/
 /src/generated-sources/
 /logs/
@@ -31,3 +30,4 @@
 /out.log
 gradle.properties
 /**/logs/
+/test_results.html
