@@ -57,8 +57,12 @@ public class AccessTransformer {
     }
 
     public enum Modifier {
-        PUBLIC(Opcodes.ACC_PUBLIC), PROTECTED(Opcodes.ACC_PROTECTED), DEFAULT(0), PRIVATE(Opcodes.ACC_PRIVATE);
-    	private static final Modifier[] lookup = new Modifier[4];
+        PUBLIC(Opcodes.ACC_PUBLIC),
+        PROTECTED(Opcodes.ACC_PROTECTED),
+        DEFAULT(0),
+        PRIVATE(Opcodes.ACC_PRIVATE);
+
+        private static final Modifier[] lookup = new Modifier[4];
         private final int accFlag;
 
         static {
@@ -80,7 +84,10 @@ public class AccessTransformer {
     }
 
     public enum FinalState {
-        LEAVE(i->i), MAKEFINAL(i->i | Opcodes.ACC_FINAL), REMOVEFINAL(i->i & ~Opcodes.ACC_FINAL), CONFLICT(i->i);
+        LEAVE(i->i),
+        MAKEFINAL(i->i | Opcodes.ACC_FINAL),
+        REMOVEFINAL(i->i & ~Opcodes.ACC_FINAL),
+        CONFLICT(i->i);
         private IntFunction<Integer> function;
 
         FinalState(final IntFunction<Integer> function) {

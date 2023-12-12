@@ -31,10 +31,6 @@ dependencyResolutionManagement {
             library('jopt-simple', 'net.sf.jopt-simple:jopt-simple:5.0.4')
             library('nulls', 'org.jetbrains:annotations:23.0.0')
             
-            version('antlr4', '4.9.1')
-            library('antlr4',         'org.antlr', 'antlr4'        ).versionRef('antlr4')
-            library('antlr4-runtime', 'org.antlr', 'antlr4-runtime').versionRef('antlr4')
-            
             version('log4j', '2.19.0')
             library('log4j-api',  'org.apache.logging.log4j', 'log4j-api' ).versionRef('log4j')
             library('log4j-core', 'org.apache.logging.log4j', 'log4j-core').versionRef('log4j')

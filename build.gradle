@@ -5,10 +5,9 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'eclipse'
-    id 'org.cadixdev.licenser' version '0.6.1'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
-    id 'antlr'
-    id 'net.minecraftforge.gradleutils' version '[2.1.2,)'
+    id 'net.minecraftforge.licenser' version '1.0.1'
+    id 'net.minecraftforge.gradleutils' version '[2.3,2.4)'
 }
 
 group 'net.minecraftforge'
@@ -29,10 +28,6 @@ license {
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(8)
     withSourcesJar()
-}
-
-compileJava {
-    dependsOn generateGrammarSource
 }
 
 tasks.named('jar', Jar).configure {
@@ -63,21 +58,15 @@ tasks.named('jar', Jar).configure {
     }
 }
 
-tasks.named('sourcesJar').configure {
-    dependsOn generateGrammarSource
-}
-
 changelog {
-    fromTag '1.0'
+    from '1.0'
 }
 
 dependencies {
-    implementation(libs.antlr4.runtime)
     implementation(libs.jopt.simple)
     implementation(libs.bundles.asm)
     implementation(libs.log4j.api)
     implementation(libs.log4j.core)
-    antlr(libs.antlr4)
 }
 
 tasks.named('shadowJar', ShadowJar).configure {
@@ -89,11 +78,6 @@ tasks.named('shadowJar', ShadowJar).configure {
             'Main-Class': 'net.minecraftforge.accesstransformer.TransformerProcessor',
             'Multi-Release': 'true'
         ])
-    }
-    dependencies {
-        exclude(dependency {
-            it.moduleName == 'antlr4'
-        })
     }
 }
 
@@ -123,11 +107,6 @@ publishing {
     repositories {
         maven gradleutils.publishingForgeMaven
     }
-}
-
-generateGrammarSource {
-    arguments += ['-visitor', '-package', 'net.minecraftforge.accesstransformer.generated']
-    outputDirectory = file("${project.buildDir}/generated-src/antlr/main/net/minecraftforge/accesstransformer/generated/")
 }
 
 allprojects {
