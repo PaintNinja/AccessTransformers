@@ -1,0 +1,63 @@
+plugins {
+    id 'java-library'
+    id 'net.minecraftforge.licenser'
+}
+
+configurations {
+    jmhOnly
+}
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(8)
+    withSourcesJar()
+}
+
+license {
+    header = rootProject.file("LICENSE-header.txt")
+    newLine = false
+}
+
+dependencies {
+    implementation rootProject
+    implementation libs.jmh.core
+    implementation libs.asm
+
+    jmhOnly sourceSets.main.output
+    jmhOnly libs.bundles.jmh
+
+    annotationProcessor libs.jmh.generator.annprocess
+}
+
+tasks.register('jmh', JavaExec) {
+    dependsOn rootProject.tasks.named('build')
+    dependsOn sourceSets.main.output
+
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(17)
+    })
+    jvmArgs = [
+            '-p', sourceSets.main.runtimeClasspath.asPath,
+            '--add-modules', 'ALL-MODULE-PATH',
+    ]
+    classpath = files(configurations.jmhOnly.asPath)
+    mainClass = 'org.openjdk.jmh.Main'
+
+    args '-bm', 'avgt'  // benchmark mode
+    args '-r', '5s' // iteration time
+    args '-w', '5s' // warmup time
+    args '-wi', '2' // warmup iterations
+
+    // profilers
+    //args '-prof', 'stack'
+    args '-prof', "jfr:dir=${project.layout.buildDirectory.asFile.get()}/jfr"
+
+    args '-tu', 'us' // time unit
+    args '-i', '2' // iterations
+    args '-f', '1' // forks
+    args '-rff', project.file("${rootProject.layout.buildDirectory.asFile.get()}/jmh_results.txt") // results file
+    args 'net.minecraftforge.accesstransformer.benchmarks.AccessTransformerListBenchmark'
+}

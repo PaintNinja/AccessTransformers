@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class AccessTransformerList {
     private static final Logger LOGGER = LogManager.getLogger("AXFORM");
@@ -124,6 +125,8 @@ public class AccessTransformerList {
         LOGGER.debug(AXFORM_MARKER,"Loaded access transformer {} from path {}", resourceName, path);
     }
 
+    private static Pattern WHITESPACE = Pattern.compile("[ \t]+");
+
     private static List<String> tokenize(String line) {
         int idx = line.indexOf('#');
         if (idx != -1) {
@@ -135,7 +138,7 @@ public class AccessTransformerList {
         }
         if (line.length() == 0)
             return Collections.emptyList();
-        return Arrays.asList(line.split("[ \t]+"));
+        return Arrays.asList(WHITESPACE.split(line));
     }
 
     private void mergeAccessTransformers(List<AccessTransformer> atList, Map<Target<?>, AccessTransformer> accessTransformers, String resourceName) {

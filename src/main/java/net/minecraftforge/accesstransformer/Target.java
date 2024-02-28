@@ -13,8 +13,8 @@ public abstract class Target<T> {
     private Type type;
 
     public Target(String className) {
-        this.className = className;
-        this.type = Type.getType("L" + className.replaceAll("\\.", "/") + ";");
+        this.className = className.replace('.', '/');
+        this.type = Type.getType('L' + className + ';');
     }
 
     public TargetType getType() {
@@ -28,9 +28,10 @@ public abstract class Target<T> {
     public final Type getASMType() {
         return type;
     }
+
     @Override
     public String toString() {
-        return Objects.toString(className) + " " + Objects.toString(getType());
+        return Objects.toString(className) + ' ' + Objects.toString(getType());
     }
 
     @Override

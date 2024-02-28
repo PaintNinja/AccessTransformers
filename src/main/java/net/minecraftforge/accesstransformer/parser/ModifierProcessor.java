@@ -4,19 +4,23 @@
  */
 package net.minecraftforge.accesstransformer.parser;
 
-import java.util.*;
 
-import net.minecraftforge.accesstransformer.*;
+import java.util.Locale;
+
+import net.minecraftforge.accesstransformer.AccessTransformer.FinalState;
 import net.minecraftforge.accesstransformer.AccessTransformer.Modifier;
 
 public final class ModifierProcessor {
     private ModifierProcessor() {}
-    public static AccessTransformer.Modifier modifier(String modifierString) {
-        String modifier = modifierString.toUpperCase(Locale.ROOT);
-        String ending = modifier.substring(modifier.length()-2, modifier.length());
 
-        if ("+F".equals(ending) || "-F".equals(ending))
-            modifier = modifier.substring(0, modifier.length()-2);
+    public static Modifier modifier(String modifierString) {
+        String modifier = modifierString.toUpperCase(Locale.ROOT);
+
+        char f = modifier.charAt(modifier.length() - 1);
+        char op = modifier.charAt(modifier.length() - 2);
+
+        if (f == 'F' && (op == '-' || op == '+'))
+            modifier = modifier.substring(0, modifier.length() - 2);
 
         switch (modifier) {
             case "PUBLIC": return Modifier.PUBLIC;
@@ -27,15 +31,19 @@ public final class ModifierProcessor {
         }
     }
 
-    public static AccessTransformer.FinalState finalState(String modifierString) {
+    public static FinalState finalState(String modifierString) {
         final String modifier = modifierString.toUpperCase(Locale.ROOT);
-        final String ending = modifier.substring(modifier.length()-2, modifier.length());
-        if ("+F".equals(ending)) {
-            return AccessTransformer.FinalState.MAKEFINAL;
-        } else if ("-F".equals(ending)) {
-            return AccessTransformer.FinalState.REMOVEFINAL;
-        } else {
-            return AccessTransformer.FinalState.LEAVE;
-        }
+
+        char f = modifier.charAt(modifier.length() - 1);
+        if (f != 'F')
+            return FinalState.LEAVE;
+
+        char op = modifier.charAt(modifier.length() - 2);
+        if (op == '-')
+            return FinalState.REMOVEFINAL;
+        if (op == '+')
+            return FinalState.MAKEFINAL;
+
+        return FinalState.LEAVE;
     }
 }
