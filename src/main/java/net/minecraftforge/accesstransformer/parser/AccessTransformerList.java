@@ -42,7 +42,7 @@ public class AccessTransformerList {
     private static final Marker AXFORM_MARKER = MarkerManager.getMarker("AXFORM");
     private final Map<Target<?>, AccessTransformer> accessTransformers = new HashMap<>();
     private INameHandler nameHandler = new IdentityNameHandler();
-    private Renamer renamer = new Renamer();
+    private final Renamer renamer = new Renamer();
 
     public void loadFromResource(String resourceName) throws URISyntaxException, IOException {
         final Path path = Paths.get(getClass().getClassLoader().getResource(resourceName).toURI());
@@ -125,7 +125,7 @@ public class AccessTransformerList {
         LOGGER.debug(AXFORM_MARKER,"Loaded access transformer {} from path {}", resourceName, path);
     }
 
-    private static Pattern WHITESPACE = Pattern.compile("[ \t]+");
+    private static final Pattern WHITESPACE = Pattern.compile("[ \t]+");
 
     private static List<String> tokenize(String line) {
         int idx = line.indexOf('#');
@@ -184,7 +184,7 @@ public class AccessTransformerList {
         LOGGER.debug(AXFORM_MARKER, "Set name handler {}", nameHandler);
     }
 
-    private class Renamer extends Remapper {
+    private final class Renamer extends Remapper {
         @Override
         public String map(String internalName) {
             return AccessTransformerList.this.nameHandler.translateClassName(internalName);

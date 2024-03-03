@@ -88,7 +88,7 @@ public class AccessTransformer {
         MAKEFINAL(i->i | Opcodes.ACC_FINAL),
         REMOVEFINAL(i->i & ~Opcodes.ACC_FINAL),
         CONFLICT(i->i);
-        private IntFunction<Integer> function;
+        private final IntFunction<Integer> function;
 
         FinalState(final IntFunction<Integer> function) {
             this.function = function;

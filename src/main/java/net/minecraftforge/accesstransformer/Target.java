@@ -10,7 +10,7 @@ import java.util.*;
 
 public abstract class Target<T> {
     private final String className;
-    private Type type;
+    private final Type type;
 
     public Target(String className) {
         this.className = className.replace('.', '/');
