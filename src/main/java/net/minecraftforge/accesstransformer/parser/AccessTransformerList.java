@@ -31,8 +31,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public class AccessTransformerList {
@@ -40,6 +42,7 @@ public class AccessTransformerList {
     private static final Marker AXFORM_MARKER = MarkerManager.getMarker("AXFORM");
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
     private final Map<Target<?>, AccessTransformer> accessTransformers = new HashMap<>();
+    private final Set<Type> validAtTypes = new HashSet<>();
     private INameHandler nameHandler = new IdentityNameHandler();
     private final Renamer renamer = new Renamer();
 
@@ -117,6 +120,9 @@ public class AccessTransformerList {
         }
         this.accessTransformers.clear();
         this.accessTransformers.putAll(localATCopy);
+        for (AccessTransformer newAT : ats) {
+            this.validAtTypes.add(newAT.getTarget().getASMType());
+        }
         LOGGER.debug(AXFORM_MARKER,"Loaded access transformer {} from path {}", resourceName, path);
     }
 
@@ -160,7 +166,7 @@ public class AccessTransformerList {
     }
 
     public boolean containsClassTarget(Type type) {
-        return accessTransformers.keySet().stream().anyMatch(k->type.equals(k.getASMType()));
+        return validAtTypes.contains(type);
     }
 
     public Map<TargetType, Map<String, AccessTransformer>> getTransformersForTarget(Type type) {
