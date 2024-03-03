@@ -30,8 +30,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +38,7 @@ import java.util.regex.Pattern;
 public class AccessTransformerList {
     private static final Logger LOGGER = LogManager.getLogger("AXFORM");
     private static final Marker AXFORM_MARKER = MarkerManager.getMarker("AXFORM");
+    private static final String[] EMPTY_STRING_ARRAY = new String[0];
     private final Map<Target<?>, AccessTransformer> accessTransformers = new HashMap<>();
     private INameHandler nameHandler = new IdentityNameHandler();
     private final Renamer renamer = new Renamer();
@@ -60,30 +59,30 @@ public class AccessTransformerList {
         int lineIndex = -1;
         for (String line : lines) {
             lineIndex++;
-            List<String> tokens = tokenize(line);
-            if (tokens.isEmpty())
+            String[] tokens = tokenize(line);
+            if (tokens.length == 0)
                 continue;
 
-            if (tokens.size() < 2 || tokens.size() > 3) {
+            if (tokens.length < 2 || tokens.length > 3) {
                 LOGGER.error(AXFORM_MARKER, "Invalid access transformer line in {}: {}", resourceName, line);
                 failed = true;
                 continue;
             }
 
-            Modifier mod = ModifierProcessor.modifier(tokens.get(0));
+            Modifier mod = ModifierProcessor.modifier(tokens[0]);
             if (mod == null) {
                 LOGGER.error(AXFORM_MARKER, "Invalid access transformer line in {}: {}", resourceName, line);
                 failed = true;
                 continue;
             }
 
-            FinalState fmod = ModifierProcessor.finalState(tokens.get(0));
+            FinalState fmod = ModifierProcessor.finalState(tokens[0]);
             Target<?> target = null;
 
-            String cls = tokens.get(1).replace('.', '/');
-            String name = tokens.size() == 2 ? null : tokens.get(2);
+            String cls = tokens[1].replace('.', '/');
+            String name = tokens.length == 2 ? null : tokens[2];
 
-            if (tokens.size() == 2) { // Class
+            if (tokens.length == 2) { // Class
                 target = new ClassTarget(renamer.map(cls));
                 //Java uses this to identify inner classes, Scala/others use it for synthetics. Either way we should be fine as it will skip over classes that don't exist.
                 int idx = target.getClassName().lastIndexOf('$');
@@ -101,11 +100,7 @@ public class AccessTransformerList {
                 int idx = name.indexOf('(');
                 String desc = name.substring(idx).replace('.', '/');
                 name = name.substring(0, idx);
-                try {
                 target = new MethodTarget(renamer.map(cls), renamer.mapMethodName(cls, name, desc), renamer.mapMethodDesc(desc));
-                } catch (Throwable t) {
-                    throw t;
-                }
             }
             ats.add(new AccessTransformer(target, mod, fmod, resourceName, lineIndex));
         }
@@ -127,18 +122,18 @@ public class AccessTransformerList {
 
     private static final Pattern WHITESPACE = Pattern.compile("[ \t]+");
 
-    private static List<String> tokenize(String line) {
+    private static String[] tokenize(String line) {
         int idx = line.indexOf('#');
         if (idx != -1) {
             while (idx > 1 && (line.charAt(idx - 1) == ' ' || line.charAt(idx - 1) == '\t'))
                 idx--;
             if (idx == 0)
-                return Collections.emptyList();
+                return EMPTY_STRING_ARRAY;
             line = line.substring(0, idx);
         }
-        if (line.length() == 0)
-            return Collections.emptyList();
-        return Arrays.asList(WHITESPACE.split(line));
+        if (line.isEmpty())
+            return EMPTY_STRING_ARRAY;
+        return WHITESPACE.split(line);
     }
 
     private void mergeAccessTransformers(List<AccessTransformer> atList, Map<Target<?>, AccessTransformer> accessTransformers, String resourceName) {

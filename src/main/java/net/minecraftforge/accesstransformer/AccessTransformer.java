@@ -20,7 +20,7 @@ public class AccessTransformer {
     private final Target<?> memberTarget;
     private final Modifier targetAccess;
     private final FinalState targetFinalState;
-    private final List<String> origins = new ArrayList<>(1);
+    private final List<String> origins = new ArrayList<>();
 
     public AccessTransformer(final Target<?> target, final Modifier modifier, final FinalState finalState, String origin, final int lineNumber) {
         this.memberTarget = target;
