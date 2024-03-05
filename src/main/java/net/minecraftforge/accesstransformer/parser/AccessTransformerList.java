@@ -30,12 +30,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 public class AccessTransformerList {
     private static final Logger LOGGER = LogManager.getLogger("AXFORM");
@@ -125,20 +123,42 @@ public class AccessTransformerList {
         LOGGER.debug(AXFORM_MARKER,"Loaded access transformer {} from path {}", resourceName, path);
     }
 
-    private static Pattern WHITESPACE = Pattern.compile("[ \t]+");
-
     private static List<String> tokenize(String line) {
-        int idx = line.indexOf('#');
-        if (idx != -1) {
-            while (idx > 1 && (line.charAt(idx - 1) == ' ' || line.charAt(idx - 1) == '\t'))
-                idx--;
-            if (idx == 0)
-                return Collections.emptyList();
-            line = line.substring(0, idx);
-        }
         if (line.length() == 0)
             return Collections.emptyList();
-        return Arrays.asList(WHITESPACE.split(line));
+
+        // This is unrolled instead of using String.split because that uses RegEx in the back end which is slow
+        List<String> ret = new ArrayList<>();
+        int start = 0;
+        for (int x = 0; x < line.length(); x++) {
+            char c = line.charAt(x);
+            if (c == ' ' || c == '\t') {
+                if (start == x)
+                    ret.add("");
+                else
+                    ret.add(line.substring(start, x));
+
+                // Skip all consecutive whitespace
+                do {
+                    x++;
+                    if (x == line.length())
+                        break;
+                    c = line.charAt(x);
+                } while (c == ' ' || c == '\t');
+
+                if (c == '#')
+                    break;
+
+                start = x--;
+            } else if (x == line.length() - 1) {
+                ret.add(line.substring(start));
+            } else if (c == '#') {
+                if (start != x)
+                    ret.add(line.substring(start, x));
+                break;
+            }
+        }
+        return ret;
     }
 
     private void mergeAccessTransformers(List<AccessTransformer> atList, Map<Target<?>, AccessTransformer> accessTransformers, String resourceName) {
