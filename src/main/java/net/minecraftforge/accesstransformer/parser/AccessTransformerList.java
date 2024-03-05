@@ -32,15 +32,18 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class AccessTransformerList {
     private static final Logger LOGGER = LogManager.getLogger("AXFORM");
     private static final Marker AXFORM_MARKER = MarkerManager.getMarker("AXFORM");
     private final Map<Target<?>, AccessTransformer> accessTransformers = new HashMap<>();
+    private final Set<Type> validAtTypes = new HashSet<>();
+    private final Renamer renamer = new Renamer();
     private INameHandler nameHandler = new IdentityNameHandler();
-    private Renamer renamer = new Renamer();
 
     public void loadFromResource(String resourceName) throws URISyntaxException, IOException {
         final Path path = Paths.get(getClass().getClassLoader().getResource(resourceName).toURI());
@@ -99,11 +102,7 @@ public class AccessTransformerList {
                 int idx = name.indexOf('(');
                 String desc = name.substring(idx).replace('.', '/');
                 name = name.substring(0, idx);
-                try {
                 target = new MethodTarget(renamer.map(cls), renamer.mapMethodName(cls, name, desc), renamer.mapMethodDesc(desc));
-                } catch (Throwable t) {
-                    throw t;
-                }
             }
             ats.add(new AccessTransformer(target, mod, fmod, resourceName, lineIndex));
         }
@@ -120,6 +119,8 @@ public class AccessTransformerList {
         }
         this.accessTransformers.clear();
         this.accessTransformers.putAll(localATCopy);
+        for (AccessTransformer newAT : ats)
+            this.validAtTypes.add(newAT.getTarget().getASMType());
         LOGGER.debug(AXFORM_MARKER,"Loaded access transformer {} from path {}", resourceName, path);
     }
 
@@ -185,7 +186,7 @@ public class AccessTransformerList {
     }
 
     public boolean containsClassTarget(Type type) {
-        return accessTransformers.keySet().stream().anyMatch(k->type.equals(k.getASMType()));
+        return this.validAtTypes.contains(type);
     }
 
     public Map<TargetType, Map<String, AccessTransformer>> getTransformersForTarget(Type type) {
@@ -204,7 +205,7 @@ public class AccessTransformerList {
         LOGGER.debug(AXFORM_MARKER, "Set name handler {}", nameHandler);
     }
 
-    private class Renamer extends Remapper {
+    private final class Renamer extends Remapper {
         @Override
         public String map(String internalName) {
             return AccessTransformerList.this.nameHandler.translateClassName(internalName);

@@ -17,7 +17,7 @@ import java.util.stream.*;
 public enum AccessTransformerEngine {
     INSTANCE;
 
-    private AccessTransformerList masterList = new AccessTransformerList();
+    private final AccessTransformerList masterList = new AccessTransformerList();
 
     public boolean transform(ClassNode clazzNode, final Type classType) {
         // this should never happen but safety first
