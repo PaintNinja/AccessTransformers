@@ -84,18 +84,19 @@ public class AccessTransformer {
     }
 
     public enum FinalState {
-        LEAVE(i->i),
-        MAKEFINAL(i->i | Opcodes.ACC_FINAL),
-        REMOVEFINAL(i->i & ~Opcodes.ACC_FINAL),
-        CONFLICT(i->i);
-        private final IntFunction<Integer> function;
+        LEAVE(i -> i),
+        MAKEFINAL(i -> i | Opcodes.ACC_FINAL),
+        REMOVEFINAL(i -> i & ~Opcodes.ACC_FINAL),
+        CONFLICT(i -> i);
 
-        FinalState(final IntFunction<Integer> function) {
+        private final IntUnaryOperator function;
+
+        FinalState(final IntUnaryOperator function) {
             this.function = function;
         }
 
         public int mergeWith(final int access) {
-            return function.apply(access);
+            return function.applyAsInt(access);
         }
     }
 
