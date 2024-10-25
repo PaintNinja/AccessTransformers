@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -125,7 +126,7 @@ public class AccessTransformerList {
     }
 
     private static List<String> tokenize(String line) {
-        if (line.length() == 0)
+        if (line.isEmpty())
             return Collections.emptyList();
 
         // This is unrolled instead of using String.split because that uses RegEx in the back end which is slow
@@ -162,13 +163,13 @@ public class AccessTransformerList {
         return ret;
     }
 
-    private void mergeAccessTransformers(List<AccessTransformer> atList, Map<Target<?>, AccessTransformer> accessTransformers, String resourceName) {
+    private static void mergeAccessTransformers(List<AccessTransformer> atList, Map<Target<?>, AccessTransformer> accessTransformers, String resourceName) {
         for (AccessTransformer at : atList) {
             accessTransformers.merge(at.getTarget(), at, (at1, at2) -> at1.mergeStates(at2, resourceName));
         }
     }
 
-    private List<AccessTransformer> invalidTransformers(HashMap<Target<?>, AccessTransformer> accessTransformers) {
+    private static List<AccessTransformer> invalidTransformers(HashMap<Target<?>, AccessTransformer> accessTransformers) {
         List<AccessTransformer> ret = new ArrayList<>();
         for (AccessTransformer at : accessTransformers.values()) {
             if (!at.isValid())
@@ -190,7 +191,7 @@ public class AccessTransformerList {
     }
 
     public Map<TargetType, Map<String, AccessTransformer>> getTransformersForTarget(Type type) {
-        Map<TargetType, Map<String, AccessTransformer>> ret = new HashMap<>();
+        Map<TargetType, Map<String, AccessTransformer>> ret = new EnumMap<>(TargetType.class);
         accessTransformers.forEach((k, v) -> {
             if (!type.equals(k.getASMType()))
                 return;
