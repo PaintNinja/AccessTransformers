@@ -169,7 +169,7 @@ public class AccessTransformerList {
         }
     }
 
-    private static List<AccessTransformer> invalidTransformers(Map<Target<?>, AccessTransformer> accessTransformers) {
+    private static List<AccessTransformer> invalidTransformers(HashMap<Target<?>, AccessTransformer> accessTransformers) {
         List<AccessTransformer> ret = new ArrayList<>();
         for (AccessTransformer at : accessTransformers.values()) {
             if (!at.isValid())
